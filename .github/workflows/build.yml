@@ -63,6 +63,8 @@ jobs:
     name: Publicar Release Oficial
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     # Esse job só roda se a Action for chamada por uma Tag de versão
     if: startsWith(github.ref, 'refs/tags/v')
     
