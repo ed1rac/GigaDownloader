@@ -1,0 +1,81 @@
+name: GigaDownloader Build & Release
+
+# Esta Action vai rodar de duas formas:
+# 1. Toda vez que você criar uma Tag/Release começando com "v" (ex: v1.0.0)
+# 2. De forma manual através da aba "Actions" no GitHub (workflow_dispatch)
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # A matriz vai rodar 3 instâncias simultâneas em servidores diferentes:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+    - name: 📥 Clonar Código Fonte
+      uses: actions/checkout@v4
+
+    - name: 🐍 Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Instalar Dependências (Comuns)
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: 🐧 Instalar Dependências Específicas (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk
+
+    - name: ⚙️ Compilar com PyInstaller
+      run: |
+        pyinstaller --noconsole --onefile --name "GigaDownloader" ytdownloader.py
+
+    - name: 🔤 Renomear Arquivo Windows
+      if: runner.os == 'Windows'
+      run: |
+        Move-Item -Path dist\GigaDownloader.exe -Destination dist\GigaDownloader-Windows.exe
+
+    - name: 🔤 Renomear Arquivo Linux/Mac
+      if: runner.os != 'Windows'
+      run: |
+        mv dist/GigaDownloader dist/GigaDownloader-${{ runner.os }}
+
+    - name: 📦 Guardar Artefatos Localmente (Artifacts)
+      uses: actions/upload-artifact@v4
+      with:
+        name: GigaDownloader-${{ runner.os }}-build
+        path: dist/GigaDownloader-*
+
+  release:
+    name: Publicar Release Oficial
+    needs: build
+    runs-on: ubuntu-latest
+    # Esse job só roda se a Action for chamada por uma Tag de versão
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: 📥 Baixar Artefatos Compilados
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+
+    - name: 🚀 Criar Release e Anexar Executáveis
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
