@@ -13,10 +13,11 @@ jobs:
   build:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.os == 'ubuntu-20.04' && 'ubuntu:20.04' || null }}
     strategy:
       # A matriz vai rodar 3 instâncias simultâneas em servidores diferentes:
       matrix:
-        os: [windows-latest, ubuntu-20.04, macos-latest]
+        os: [windows-latest, ubuntu-22.04, macos-latest]
 
     steps:
     - name: 📥 Clonar Código Fonte
