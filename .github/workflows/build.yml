@@ -1,8 +1,5 @@
 name: GigaDownloader Build & Release
 
-# Esta Action vai rodar de duas formas:
-# 1. Toda vez que você criar uma Tag/Release começando com "v" (ex: v1.0.0)
-# 2. De forma manual através da aba "Actions" no GitHub (workflow_dispatch)
 on:
   push:
     tags:
@@ -13,22 +10,19 @@ jobs:
   build:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.runner }}
-    # Container apenas para Linux - executa dentro de Ubuntu 20.04
     container: ${{ matrix.container }}
     strategy:
+      fail-fast: false  # Continuar outros builds mesmo se um falhar
       matrix:
         include:
-          # Windows - sem container
           - os: Windows
             runner: windows-latest
             container: null
           
-          # Linux - COM container Ubuntu 20.04 (GLIBC 2.31)
           - os: Linux
             runner: ubuntu-22.04
             container: ubuntu:20.04
           
-          # macOS - sem container
           - os: macOS
             runner: macos-latest
             container: null
@@ -52,7 +46,10 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         apt-get update
-        apt-get install -y python3-tk
+        DEBIAN_FRONTEND=noninteractive apt-get install -y \
+          python3-tk \
+          python3-dev \
+          build-essential
 
     - name: ⚙️ Compilar com PyInstaller
       run: |
@@ -80,7 +77,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    # Esse job só roda se a Action for chamada por uma Tag de versão
     if: startsWith(github.ref, 'refs/tags/v')
     
     steps:
