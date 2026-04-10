@@ -12,12 +12,26 @@ on:
 jobs:
   build:
     name: Build for ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    container: ${{ matrix.os == 'ubuntu-20.04' && 'ubuntu:20.04' || null }}
+    runs-on: ${{ matrix.runner }}
+    # Container apenas para Linux - executa dentro de Ubuntu 20.04
+    container: ${{ matrix.container }}
     strategy:
-      # A matriz vai rodar 3 instâncias simultâneas em servidores diferentes:
       matrix:
-        os: [windows-latest, ubuntu-22.04, macos-latest]
+        include:
+          # Windows - sem container
+          - os: Windows
+            runner: windows-latest
+            container: null
+          
+          # Linux - COM container Ubuntu 20.04 (GLIBC 2.31)
+          - os: Linux
+            runner: ubuntu-22.04
+            container: ubuntu:20.04
+          
+          # macOS - sem container
+          - os: macOS
+            runner: macos-latest
+            container: null
 
     steps:
     - name: 📥 Clonar Código Fonte
@@ -37,8 +51,8 @@ jobs:
     - name: 🐧 Instalar Dependências Específicas (Linux)
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-tk
+        apt-get update
+        apt-get install -y python3-tk
 
     - name: ⚙️ Compilar com PyInstaller
       run: |
@@ -52,12 +66,12 @@ jobs:
     - name: 🔤 Renomear Arquivo Linux/Mac
       if: runner.os != 'Windows'
       run: |
-        mv dist/GigaDownloader dist/GigaDownloader-${{ runner.os }}
+        mv dist/GigaDownloader dist/GigaDownloader-${{ matrix.os }}
 
     - name: 📦 Guardar Artefatos Localmente (Artifacts)
       uses: actions/upload-artifact@v4
       with:
-        name: GigaDownloader-${{ runner.os }}-build
+        name: GigaDownloader-${{ matrix.os }}-build
         path: dist/GigaDownloader-*
 
   release:
