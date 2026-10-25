@@ -4,6 +4,7 @@ import yt_dlp
 import os
 import threading
 import re
+import shutil
 
 # Configuração Padrão do Tema e Cores do CustomTkinter
 ctk.set_appearance_mode("System")  # Segue o modo claro/escuro do Sistema Operacional
@@ -14,7 +15,7 @@ class DownloaderApp(ctk.CTk):
         super().__init__()
 
         # Configurações da Janela
-        self.title("Giga Downloader de Vídeos")
+        self.title("Giga Downloader de Vídeos - v1.0.7")
         self.geometry("600x480")
         self.resizable(False, False)
 
@@ -56,7 +57,7 @@ class DownloaderApp(ctk.CTk):
         self.status_label.pack(pady=5)
 
         # === Rodapé / Créditos ===
-        self.footer_label = ctk.CTkLabel(self, text="Ed (ED1@rac)", font=ctk.CTkFont(size=10), text_color="gray")
+        self.footer_label = ctk.CTkLabel(self, text="Ed (ED1@rac) • v1.0.7", font=ctk.CTkFont(size=10), text_color="gray")
         self.footer_label.pack(side="bottom", pady=10)
 
     def change_directory(self):
@@ -82,27 +83,47 @@ class DownloaderApp(ctk.CTk):
                 # Velocidade do download
                 speed = d.get('_speed_str', 'N/A')
                 speed = re.sub(r'\x1b\[[0-9;]*m', '', speed)
+
+                # Distingue vídeo e áudio em downloads com faixas separadas
+                vcodec = d.get('info_dict', {}).get('vcodec')
+                tipo = "vídeo" if (vcodec and vcodec != 'none') else "áudio"
                 
-                # Atualiza a mensagem da tela (Ex: Baixando: 15.0% (Velocidade: 2MiB/s))
-                # Aqui utilizamos configure para não precisar repintar a tela (thread safe no CTk na maioria das vezes)
-                self.status_label.configure(text=f"Baixando: {percent_clean} (Velocidade: {speed})", text_color=("black", "white"))
+                # Atualiza a mensagem da tela (Ex: Baixando vídeo: 15.0% (Velocidade: 2MiB/s))
+                self.status_label.configure(text=f"Baixando {tipo}: {percent_clean} (Velocidade: {speed})", text_color=("black", "white"))
             except Exception:
                 self.status_label.configure(text="Baixando...", text_color=("black", "white"))
 
         elif d['status'] == 'finished':
             self.progress_bar.set(1)
-            self.status_label.configure(text="Download Concluído! Aguarde o processamento do arquivo...", text_color="#2b8a3e")  # verde
+            self.status_label.configure(text="Download concluído! Processando arquivo...", text_color="#2b8a3e")  # verde
+
+    def postprocessor_hook(self, d):
+        """Notifica quando o FFmpeg está processando ou mesclando as faixas"""
+        if d.get('status') == 'started':
+            self.status_label.configure(text="Mesclando vídeo e áudio...", text_color=("black", "white"))
 
     def download_thread(self, link):
         """Função que roda em 2º plano (Thread) para não travar a GUI"""
+        ffmpeg_bin = shutil.which('ffmpeg')
+        if not ffmpeg_bin:
+            for candidate in [r'C:\ffmpeg\bin\ffmpeg.exe', r'C:\ffmpeg\bin']:
+                if os.path.exists(candidate):
+                    ffmpeg_bin = candidate
+                    break
+
         ydl_opts = {
-            'format': 'best[ext=mp4]/best',
+            'format': 'bestvideo*+bestaudio/best',
+            'merge_output_format': 'mp4',
             'outtmpl': os.path.join(self.download_path, '%(title)s.%(ext)s'),
             'noplaylist': True,
             'progress_hooks': [self.progress_hook],
+            'postprocessor_hooks': [self.postprocessor_hook],
             'quiet': True,
             'no_warnings': True
         }
+
+        if ffmpeg_bin:
+            ydl_opts['ffmpeg_location'] = ffmpeg_bin
 
         try:
             self.status_label.configure(text="Buscando informações do vídeo...", text_color=("black", "white"))
@@ -111,8 +132,17 @@ class DownloaderApp(ctk.CTk):
                 ydl.download([link])
                 
             self.status_label.configure(text="✅ Vídeo baixado com sucesso!", text_color="#2b8a3e")  # verde
-        except yt_dlp.utils.DownloadError:
-            self.status_label.configure(text="❌ Erro: URL inválida ou vídeo indisponível.", text_color="#c92a2a") # vermelho
+        except yt_dlp.utils.DownloadError as e:
+            err_msg = str(e)
+            print(f"Erro detalhado (DownloadError): {err_msg}")
+            if "Requested format is not available" in err_msg:
+                self.status_label.configure(text="❌ Erro: Formato indisponível para este vídeo.", text_color="#c92a2a")
+            elif "Sign in" in err_msg or "confirm you're not a bot" in err_msg:
+                self.status_label.configure(text="❌ Erro: Bloqueio do YouTube (anti-bot).", text_color="#c92a2a")
+            elif "Private video" in err_msg:
+                self.status_label.configure(text="❌ Erro: Vídeo privado.", text_color="#c92a2a")
+            else:
+                self.status_label.configure(text="❌ Erro: URL inválida ou vídeo indisponível.", text_color="#c92a2a")
         except Exception as e:
             self.status_label.configure(text="❌ Ocorreu um erro no download.", text_color="#c92a2a")
             print(f"Erro detalhado: {e}")
