@@ -9,6 +9,9 @@
 
 **Um aplicativo desktop moderno, rápido e multiplataforma com interface gráfica intuitiva para baixar vídeos e extrair áudios (MP3/MP4) de milhares de plataformas.**
 
+  <br />
+  <img src="./assets/screenshot.png" alt="Interface Principal do Giga Downloader v1.0.8" width="620" />
+  <p><em>Interface gráfica moderna em Dark Mode com download em alta definição (v1.0.8)</em></p>
 </div>
 
 ---
