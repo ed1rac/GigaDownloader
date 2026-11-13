@@ -1,14 +1,13 @@
 # 🎬 Giga Downloader — Desktop Video & Audio Downloader
 
 <div align="center">
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python)](https://www.python.org/)
-[![Multiplatform](https://img.shields.io/badge/Plataforma-Windows_%7C_Linux_%7C_macOS-success.svg)](https://github.com/ed1rac/GigaDownloader/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![GitHub Actions CI](https://img.shields.io/badge/CI-Automated_Builds-green.svg?logo=githubactions)](https://github.com/ed1rac/GigaDownloader/actions)
-
-**Um aplicativo desktop moderno, rápido e multiplataforma com interface gráfica intuitiva para baixar vídeos e extrair áudios (MP3/MP4) de milhares de plataformas.**
-
+  <p>
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg?logo=python" alt="Python"></a>
+    <a href="https://github.com/ed1rac/GigaDownloader/releases"><img src="https://img.shields.io/badge/Plataforma-Windows_%7C_Linux_%7C_macOS-success.svg" alt="Multiplatform"></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+    <a href="https://github.com/ed1rac/GigaDownloader/actions"><img src="https://img.shields.io/badge/CI-Automated_Builds-green.svg?logo=githubactions" alt="GitHub Actions CI"></a>
+  </p>
+  <p><strong>Um aplicativo desktop moderno, rápido e multiplataforma com interface gráfica intuitiva para baixar vídeos e extrair áudios (MP3/MP4) de milhares de plataformas.</strong></p>
   <br />
   <img src="./assets/screenshot.png" alt="Interface Principal do Giga Downloader v1.0.8" width="620" />
   <p><em>Interface gráfica moderna em Dark Mode com download em alta definição (v1.0.8)</em></p>
