@@ -1,0 +1,5 @@
+theme: jekyll-theme-cayman
+title: "🎬 Giga Downloader"
+description: "Aplicativo desktop moderno e rápido para download de vídeos e extração de áudio (MP3/MP4)."
+kramdown:
+  parse_block_html: true
